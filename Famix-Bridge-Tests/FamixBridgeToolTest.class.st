@@ -13,21 +13,13 @@ Class {
 	#package : 'Famix-Bridge-Tests'
 }
 
-{ #category : 'initialization' }
-FamixBridgeToolTest >> initialize [ 
-	
-	super initialize.
-	
-	"in initialize method to only generate models once for all tests (hopefully it works like that)"
-	testResources := TestJavaModelBuilder new.
-]
-
 { #category : 'running' }
 FamixBridgeToolTest >> setUp [
 
 	super setUp.
 
 	"Put here a common initialization logic for tests"
+	testResources := TestJavaModelBuilder new.
 	tool := FamixBridgeTool instance.
 	mustRestartCache := tool isCacheEnabled.
 

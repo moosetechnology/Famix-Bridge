@@ -68,6 +68,13 @@ FamixBridgeTool >> enableCache [
 	cache enable
 ]
 
+{ #category : 'searching stubs' }
+FamixBridgeTool >> find: p amongChildrenOf: currentSearchResult [
+
+	^ currentSearchResult allContainedEntities detect: [ :e |
+		  e class = p class and: [ e name = p name ] ]
+]
+
 { #category : 'searching resources' }
 FamixBridgeTool >> findResource: stub [
 
@@ -167,31 +174,50 @@ FamixBridgeTool >> isCacheEnabled [
 	^ cache enabled
 ]
 
+{ #category : 'as yet unclassified' }
+FamixBridgeTool >> searchEntity: entity inModel: resourceModel [
+
+	| parentsList currentSearchResult |
+	parentsList := entity allContainers reverse.
+	currentSearchResult := resourceModel rootEntities
+		                       detect: [ :e |
+		                       e name = parentsList first name ]
+		                       ifNone: [ ^ nil ].
+	parentsList allButFirst do: [ :p |
+			currentSearchResult := self
+				                       find: p
+				                       amongChildrenOf: currentSearchResult.
+			currentSearchResult ifNil: [ ^ nil ] ].
+	^ currentSearchResult := self
+		                         find: entity
+		                         amongChildrenOf: currentSearchResult
+]
+
 { #category : 'searching resources' }
 FamixBridgeTool >> searchResource: stub inModel: resourceModel [
 
-	^ resourceModel
-		  entityNamed: stub mooseName
-		  ifAbsent: [ nil ]
-		  ifPresent: [ :resource |
-			  (resource isStub not and: [ resource class = stub class ])
+	| searchResult |
+	searchResult := self searchEntity: stub inModel: resourceModel.
+
+	^ searchResult ifNotNil: [
+			  searchResult isStub not
 				  ifTrue: [
-					  cache addDefinedEntity: resource.
-					  resource ]
+						  cache addDefinedEntity: searchResult.
+						  searchResult ]
 				  ifFalse: [ nil ] ]
 ]
 
 { #category : 'searching stubs' }
 FamixBridgeTool >> searchStub: entity inModel: resourceModel [
 
-	^ resourceModel
-		  entityNamed: entity mooseName
-		  ifAbsent: [ nil ]
-		  ifPresent: [ :stub |
-			  (stub isStub and: [ stub class = entity class ])
+	| searchResult |
+	searchResult := self searchEntity: entity inModel: resourceModel.
+
+	^ searchResult ifNotNil: [
+			  searchResult isStub
 				  ifTrue: [
-					  cache addStubEntity: stub.
-					  stub ]
+						  cache addStubEntity: searchResult.
+						  searchResult ]
 				  ifFalse: [ nil ] ]
 ]
 
