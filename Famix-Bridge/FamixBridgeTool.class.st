@@ -57,6 +57,12 @@ FamixBridgeTool >> allWorkspaceModelsButSourceModel [
 ]
 
 { #category : 'cache management' }
+FamixBridgeTool >> clearCache [ 
+
+	cache clearCache 
+]
+
+{ #category : 'cache management' }
 FamixBridgeTool >> disableCache [ 
 
 	cache disable
@@ -71,18 +77,16 @@ FamixBridgeTool >> enableCache [
 { #category : 'searching stubs' }
 FamixBridgeTool >> find: p amongChildrenOf: currentSearchResult [
 
-	^ currentSearchResult allContainedEntities detect: [ :e |
-		  e class = p class and: [ e name = p name ] ]
+	^ currentSearchResult allContainedEntities
+		  detect: [ :e | e class = p class and: [ e name = p name ] ]
+		  ifNone: [ nil ]
 ]
 
 { #category : 'searching resources' }
 FamixBridgeTool >> findResource: stub [
 
 	sourceModel := stub mooseModel.
-
-	^ ActiveMooseWorkspace value interModelModeActive 
-		  ifTrue: [ self findResourceWithinWorkspace: stub ]
-		  ifFalse: [ self findResourceLookingThroughAllModels: stub ]
+	^ self findResourceWithinWorkspace: stub
 ]
 
 { #category : 'searching resources' }
@@ -95,13 +99,14 @@ FamixBridgeTool >> findResource: stub inModel: resourceModel [
 
 { #category : 'searching resources' }
 FamixBridgeTool >> findResource: stub withinModels: modelsToSearch [
-"TODO : consider the possibility of results in several models and modify as needed"
-	modelsToSearch do: [ :m |
-		| searchResult |
-		searchResult := self findResource: stub inModel: m.
-		searchResult ifNotNil: [ ^ searchResult ] ].
 
-	^ nil
+	modelsToSearch do: [ :m |
+			| searchResult |
+			searchResult := self findResource: stub inModel: m.
+			searchResult ifNotNil: [ ^ searchResult ] ].
+
+	"by default, return the stub if no defined version found"
+	^ stub
 ]
 
 { #category : 'searching resources' }
@@ -174,7 +179,7 @@ FamixBridgeTool >> isCacheEnabled [
 	^ cache enabled
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'searching' }
 FamixBridgeTool >> searchEntity: entity inModel: resourceModel [
 
 	| parentsList currentSearchResult |
