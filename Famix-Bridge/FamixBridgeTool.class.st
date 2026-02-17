@@ -183,11 +183,13 @@ FamixBridgeTool >> searchEntity: entity inModel: resourceModel [
 		                       detect: [ :e |
 		                       e name = parentsList first name ]
 		                       ifNone: [ ^ nil ].
+			
 	parentsList allButFirst do: [ :p |
 			currentSearchResult := self
 				                       find: p
 				                       amongChildrenOf: currentSearchResult.
 			currentSearchResult ifNil: [ ^ nil ] ].
+		
 	^ currentSearchResult := self
 		                         find: entity
 		                         amongChildrenOf: currentSearchResult
@@ -197,7 +199,9 @@ FamixBridgeTool >> searchEntity: entity inModel: resourceModel [
 FamixBridgeTool >> searchResource: stub inModel: resourceModel [
 
 	| searchResult |
+	ActiveMooseWorkspace value interModelModeActive: false.
 	searchResult := self searchEntity: stub inModel: resourceModel.
+	ActiveMooseWorkspace value interModelModeActive: true.
 
 	^ searchResult ifNotNil: [
 			  searchResult isStub not
@@ -211,7 +215,9 @@ FamixBridgeTool >> searchResource: stub inModel: resourceModel [
 FamixBridgeTool >> searchStub: entity inModel: resourceModel [
 
 	| searchResult |
+	ActiveMooseWorkspace value interModelModeActive: false.
 	searchResult := self searchEntity: entity inModel: resourceModel.
+	ActiveMooseWorkspace value interModelModeActive: true.
 
 	^ searchResult ifNotNil: [
 			  searchResult isStub

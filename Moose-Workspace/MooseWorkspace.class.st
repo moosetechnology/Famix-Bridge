@@ -43,7 +43,7 @@ MooseWorkspace >> clearLibrairiesModel [
 { #category : 'initialization' }
 MooseWorkspace >> defaultStubResolverStrategy [
 
-	^ ResolveIfCalledByStubStrategy new
+	^ ResolveAndMergeResultsStrategy new
 ]
 
 { #category : 'initialization' }
