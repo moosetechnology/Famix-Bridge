@@ -40,6 +40,16 @@ MooseWorkspace >> clearLibrairiesModel [
 	mainModel ifNotNil: [ models add: mainModel ]
 ]
 
+{ #category : 'as yet unclassified' }
+MooseWorkspace >> createFullMMECache [
+	
+	"making sure the cache is enabled"
+	FamixBridgeTool instance enableCache.
+
+	self interModelModeDuring: [
+		FamixBridgeTool instance fullMMECacheFor: self ]
+]
+
 { #category : 'initialization' }
 MooseWorkspace >> defaultStubResolverStrategy [
 
