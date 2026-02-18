@@ -75,11 +75,16 @@ FamixBridgeTool >> enableCache [
 ]
 
 { #category : 'searching stubs' }
-FamixBridgeTool >> find: p amongChildrenOf: currentSearchResult [
+FamixBridgeTool >> find: stubEntity amongChildrenOf: currentSearchResult [
+	"The code could be simple but we have optimizations:
+	- We save the name because we need to access it a lot
+	- We use a #do: instead of a detect: to not have to build the full contained entities list in case we find the right result in the first entities"
 
-	^ currentSearchResult allContainedEntities
-		  detect: [ :e | e class = p class and: [ e name = p name ] ]
-		  ifNone: [ nil ]
+	| name |
+	name := stubEntity name.
+	currentSearchResult containedEntitiesDo: [ :child | (child class = stubEntity class and: [ child name = name ]) ifTrue: [ ^ child ] ].
+
+	^ nil
 ]
 
 { #category : 'searching resources' }
