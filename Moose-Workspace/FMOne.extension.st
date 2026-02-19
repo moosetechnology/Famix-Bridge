@@ -19,6 +19,22 @@ FMOne >> findVersionsOfEntity: anObject [
 ]
 
 { #category : '*Moose-Workspace' }
+FMOne >> read: anObject [
+
+	anObject canBeStub ifFalse: [ ^ super read: anObject ].
+
+	^ ActiveMooseWorkspace value interModelModeActive
+		  ifTrue: [ self readResolveAndMergeResults: anObject ]
+		  ifFalse: [ super read: anObject ]
+]
+
+{ #category : '*Moose-Workspace' }
+FMOne >> readResolveAndMergeResults: anObject [
+"For a FMOne slot, return (if it exists) the defined entity"
+	^ self resolveResult: (super read: anObject) 
+]
+
+{ #category : '*Moose-Workspace' }
 FMOne >> resolveResult: anObject [
 "returns the resolved entity if it is found, returns the stub entity otherwise"
 	| resolvedEntity |

@@ -13,6 +13,27 @@ FMMany >> findVersionsOfEntity: anObject [
 ]
 
 { #category : '*Moose-Workspace' }
+FMMany >> read: anObject [
+
+	anObject canBeStub ifFalse: [ ^ super read: anObject ].
+
+	^ ActiveMooseWorkspace value interModelModeActive
+		  ifTrue: [ self readResolveAndMergeResults: anObject ]
+		  ifFalse: [ super read: anObject ]
+]
+
+{ #category : '*Moose-Workspace' }
+FMMany >> readResolveAndMergeResults: anObject [
+"For a FMMany slot, return the composition of the results of reading this slot for every version of the entity"
+	| receiverEntities |
+	receiverEntities := self findVersionsOfEntity: anObject.
+
+	^ receiverEntities isCollection
+		  ifTrue: [ self readAndMergeResults: receiverEntities ]
+		  ifFalse: [ self resolveResult: (super read: receiverEntities) ]
+]
+
+{ #category : '*Moose-Workspace' }
 FMMany >> resolveResult: aCollection [
 	"returns the resolved entity if it is found, returns the stub entity otherwise"
 

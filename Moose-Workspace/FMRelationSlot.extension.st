@@ -13,22 +13,27 @@ FMRelationSlot >> findVersionsOfEntity: anObject [
 ]
 
 { #category : '*Moose-Workspace' }
-FMRelationSlot >> read: anObject [
-
-	anObject canBeStub ifFalse: [ ^ super read: anObject ].
-
-	^ ActiveMooseWorkspace value interModelModeActive
-		  ifTrue: [ ActiveMooseWorkspace value slot: self read: anObject ]
-		  ifFalse: [ super read: anObject ]
-]
-
-{ #category : '*Moose-Workspace' }
 FMRelationSlot >> readAndMergeResults: receiverEntities [
 
-	| results | 
+	| results |
 	results := OrderedCollection new. "FMSlotMultivalueLink is a subclass of OrderedCollection, so it should be fine to use it here? Not ideal though"
-	receiverEntities do: [ :r | results addAll: (super read: r) ].
-	
+	receiverEntities do: [ :r |
+			| entityRes |
+			entityRes := OrderedCollection new.
+			(super read: r) do: [ :res |
+					res isAssociation
+						ifTrue: [ "using a collection here to allow duplicates if they come from the same view of an entity"
+								res source = r
+									ifTrue: [
+										(res equivalentTargetFoundIn: results) ifFalse: [
+											entityRes add: res ] ]
+									ifFalse: [
+										(res equivalentSourceFoundIn: results) ifFalse: [
+											entityRes add: res ] ] ]
+						ifFalse: [
+						(res equivalentFoundIn: results) ifFalse: [ entityRes add: res ] ] ].
+			results addAll: entityRes ].
+
 	^ results
 ]
 

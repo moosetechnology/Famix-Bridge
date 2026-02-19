@@ -73,8 +73,8 @@ FamixBridgeTool >> find: stubEntity amongChildrenOf: currentSearchResult [
 	- We use a #do: instead of a detect: to not have to build the full contained entities list in case we find the right result in the first entities"
 
 	| name |
-	name := stubEntity name.
-	currentSearchResult containedEntitiesDo: [ :child | (child class = stubEntity class and: [ child name = name ]) ifTrue: [ ^ child ] ].
+	name := stubEntity mooseName.
+	currentSearchResult containedEntitiesDo: [ :child | (child class = stubEntity class and: [ child mooseName = name ]) ifTrue: [ ^ child ] ].
 
 	^ nil
 ]
@@ -170,7 +170,7 @@ FamixBridgeTool >> searchEntity: entity inModel: resourceModel [
 		
 	currentSearchResult := resourceModel rootEntities
 		                       detect: [ :e |
-		                       e name = parentsList first name ]
+		                       e mooseName = parentsList first mooseName ]
 		                       ifNone: [ ^ nil ].
 
 	parentsList allButFirst do: [ :p |
