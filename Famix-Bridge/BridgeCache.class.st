@@ -35,6 +35,20 @@ BridgeCache >> addDefinedEntity: anEntity [
 ]
 
 { #category : 'testing' }
+BridgeCache >> addStubEntities: stubList [
+
+	| value |
+	enabled ifFalse: [ ^ self ].
+	
+	value := cacheHashTable
+		         at: stubList anyOne mooseName
+		         ifAbsentPut: [ MultiModelEntity new ].
+	
+	stubList do: [ :stub | value addStubEntity: stub ]
+	
+]
+
+{ #category : 'testing' }
 BridgeCache >> addStubEntity: aStub [
 
 	| value |
@@ -65,6 +79,20 @@ BridgeCache >> definedEntity: aStub inModel: aMooseModel [
 			  ifPresent: [ :entity | entity ] ]
 ]
 
+{ #category : 'accessing cache' }
+BridgeCache >> definedEntityExists: aStub [
+	"returns true if a defined entity exists for this stub"
+
+	| res |
+	enabled ifFalse: [ ^ nil ].
+
+	res := cacheHashTable
+		       at: aStub mooseName
+		       ifPresent: [ :mme | mme definedEntities isNotEmpty ].
+
+	^ res ifNil: [ false ] ifNotNil: [ res ]
+]
+
 { #category : 'accessing' }
 BridgeCache >> disable [ 
 
@@ -81,6 +109,12 @@ BridgeCache >> enable [
 BridgeCache >> enabled [
 
 	^ enabled
+]
+
+{ #category : 'as yet unclassified' }
+BridgeCache >> getDuplicatesFrom: aMooseWorkspace [
+
+	^ cacheHashTable flatCollect: [ :value | value stubEntities values ]
 ]
 
 { #category : 'initialization' }

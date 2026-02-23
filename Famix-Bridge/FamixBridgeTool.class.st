@@ -117,17 +117,21 @@ FamixBridgeTool >> findStub: entity inModel: resourceModel [
 ]
 
 { #category : 'searching stubs' }
-FamixBridgeTool >> findStubs: stub withinModels: modelsToSearch [
+FamixBridgeTool >> findStubs: entity withinModels: modelsToSearch [
 
 	| stubList |
 	stubList := OrderedCollection new.
-	
-	modelsToSearch do: [ :m |
-		| searchResult |
-		searchResult := self findStub: stub inModel: m.
-		searchResult ifNotNil: [ stubList add: searchResult ] ].
+	entity isStub ifTrue: [ stubList add: entity ].
 
-	^ stubList 
+	modelsToSearch do: [ :m |
+			| searchResult |
+			searchResult := self findStub: entity inModel: m.
+			searchResult ifNotNil: [ stubList add: searchResult ] ].
+
+	(stubList size > 1 or: [ cache definedEntityExists: stubList anyOne ])
+		ifTrue: [ cache addStubEntities: stubList ].
+
+	^ stubList
 ]
 
 { #category : 'searching stubs' }
@@ -158,6 +162,11 @@ FamixBridgeTool >> initialize [
 FamixBridgeTool >> isCacheEnabled [
 
 	^ cache enabled
+]
+
+{ #category : 'removing' }
+FamixBridgeTool >> removeDuplicatesEntitiesOf: aFamixJavaModel [ 
+	aFamixJavaModel removeAll: (cache getDuplicatesFrom: ActiveMooseWorkspace value) 
 ]
 
 { #category : 'searching' }
@@ -209,7 +218,7 @@ FamixBridgeTool >> searchStub: entity inModel: resourceModel [
 	^ searchResult ifNotNil: [
 			  searchResult isStub
 				  ifTrue: [
-						  cache addStubEntity: searchResult.
+						  "cache addStubEntity: searchResult."
 						  searchResult ]
 				  ifFalse: [ nil ] ]
 ]

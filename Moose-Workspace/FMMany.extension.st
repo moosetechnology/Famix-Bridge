@@ -15,9 +15,12 @@ FMMany >> findVersionsOfEntity: anObject [
 { #category : '*Moose-Workspace' }
 FMMany >> read: anObject [
 
+	| workspace |
 	anObject canBeStub ifFalse: [ ^ super read: anObject ].
 
-	^ ActiveMooseWorkspace value interModelModeActive
+	workspace := ActiveMooseWorkspace value.
+	^ (workspace interModelModeActive and: [
+		   workspace models includes: anObject mooseModel ])
 		  ifTrue: [ self readResolveAndMergeResults: anObject ]
 		  ifFalse: [ super read: anObject ]
 ]
