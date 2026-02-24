@@ -9,25 +9,41 @@ FMRelationSlot >> checkForNoResult: readReturnValue [
 { #category : '*Moose-Workspace' }
 FMRelationSlot >> readAndMergeResults: receiverEntities [
 
-	| results mooseName |
+	| results mooseNames isAssoc isSource readResults |
 	results := OrderedCollection new. "FMSlotMultivalueLink is a subclass of OrderedCollection, so it should be fine to use it here? Maybe not ideal though"
-	mooseName := receiverEntities anyOne mooseName.
+	mooseNames := OrderedCollection new.
+	isAssoc := self targetClass usesTrait: FamixTAssociation.
+	isSource := false.
+
 	receiverEntities do: [ :r |
-			| entityRes |
-			"using a collection here to allow duplicates if they come from the same view of an entity"	
+			| entityRes newMooseNames |
+			"using a collection here to allow duplicates if they come from the same view of an entity"
 			entityRes := OrderedCollection new.
-			(super read: r) do: [ :res |
-					res isAssociation
-						ifTrue: [ 							
-								res source = r
+			readResults := super read: r.
+			isAssoc and: [
+				readResults ifNotEmpty: [
+					isSource := readResults anyOne source = r ] ].
+			newMooseNames := OrderedCollection new.
+			readResults do: [ :res |
+					isAssoc
+						ifTrue: [
+								isSource
 									ifTrue: [
-										(mooseName equivalentTargetFoundIn: results) ifFalse: [
-											entityRes add: res ] ]
+											(res
+												 equivalentTargetFoundIn: mooseNames
+												 addingToMooseNames: newMooseNames) ifFalse: [
+												entityRes add: res ] ]
 									ifFalse: [
-										(mooseName equivalentSourceFoundIn: results) ifFalse: [
-											entityRes add: res ] ] ]
+											(res
+												 equivalentSourceFoundIn: mooseNames
+												 addingToMooseNames: newMooseNames) ifFalse: [
+												entityRes add: res ] ] ]
 						ifFalse: [
-						(mooseName equivalentFoundIn: results) ifFalse: [ entityRes add: res ] ] ].
+								(res
+									 equivalentFoundIn: mooseNames
+									 addingToMooseNames: newMooseNames) ifFalse: [
+									entityRes add: res ] ] ].
+			mooseNames addAll: newMooseNames.
 			results addAll: entityRes ].
 
 	^ results
