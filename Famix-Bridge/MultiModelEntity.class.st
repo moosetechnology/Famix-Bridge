@@ -48,6 +48,16 @@ MultiModelEntity >> addStubEntity: anEntity [
 	searchedModels add: anEntity mooseModel mooseID
 ]
 
+{ #category : 'as yet unclassified' }
+MultiModelEntity >> allVersions [ 
+
+	| versions |
+	versions := OrderedCollection new.
+	versions addAll: definedEntities values.
+	versions addAll: stubEntities values.
+	^ versions
+]
+
 { #category : 'accessing' }
 MultiModelEntity >> definedEntities [
 

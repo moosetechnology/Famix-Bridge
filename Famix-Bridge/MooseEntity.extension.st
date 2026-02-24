@@ -22,6 +22,18 @@ MooseEntity >> findStubsOfEntity [
 ]
 
 { #category : '*Famix-Bridge' }
+MooseEntity >> getAllVersionsOfEntity [
+
+	^ FamixBridgeTool instance getAllVersionsOfEntity: self
+]
+
+{ #category : '*Famix-Bridge' }
+MooseEntity >> getResolvedStub [
+
+	^ FamixBridgeTool instance getResource: self
+]
+
+{ #category : '*Famix-Bridge' }
 MooseEntity >> resolveStub [
 
 	self isStub ifFalse: [ ^ self ].

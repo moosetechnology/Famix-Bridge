@@ -148,8 +148,26 @@ FamixBridgeTool >> fullMMECacheFor: aMooseWorkspace [
 
 	aMooseWorkspace models do: [ :m |
 			| stubs |
+			aMooseWorkspace interModelModeActive: false.
 			stubs := m entities select: [ :e | e isStub ].
+			aMooseWorkspace interModelModeActive: true.
 			stubs do: [ :s | s findAllVersionsOfEntity ] ]
+]
+
+{ #category : 'as yet unclassified' }
+FamixBridgeTool >> getAllVersionsOfEntity: entity [
+
+	^ (cache allVersionsOf: entity)
+		  ifNotNil: [ :entities | entities ]
+		  ifNil: [ entity ]
+]
+
+{ #category : 'as yet unclassified' }
+FamixBridgeTool >> getResource: stub [
+
+	^ (cache definedEntity: stub)
+		  ifNotNil: [ :entity | entity ]
+		  ifNil: [ nil ]
 ]
 
 { #category : 'initialization' }
@@ -165,8 +183,12 @@ FamixBridgeTool >> isCacheEnabled [
 ]
 
 { #category : 'removing' }
-FamixBridgeTool >> removeDuplicatesEntitiesOf: aFamixJavaModel [ 
-	aFamixJavaModel removeAll: (cache getDuplicatesFrom: ActiveMooseWorkspace value) 
+FamixBridgeTool >> removeDuplicatesEntitiesOf: anOrderedCollection [
+
+	| duplicates |
+	duplicates := cache getDuplicatesFrom: ActiveMooseWorkspace value.
+	anOrderedCollection removeAllSuchThat: [ :e |
+		(cache isIn: e mooseName) and: [ duplicates includes: e ] ]
 ]
 
 { #category : 'searching' }

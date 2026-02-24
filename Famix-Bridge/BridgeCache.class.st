@@ -61,10 +61,34 @@ BridgeCache >> addStubEntity: aStub [
 	value addStubEntity: aStub
 ]
 
+{ #category : 'accessing cache' }
+BridgeCache >> allVersionsOf: entity [ 
+	"returns the defined entity of the given stub found in any model. returns nil if value isn't in cache"
+
+	enabled ifFalse: [ ^ nil ].
+
+	"should be only one, but cache structure needs to change anyway so it'll be changed"
+	^ cacheHashTable at: entity mooseName ifPresent: [ :mme |
+		  mme allVersions ]
+]
+
 { #category : 'as yet unclassified' }
 BridgeCache >> clearCache [
 
 	cacheHashTable := HashTable new
+]
+
+{ #category : 'accessing cache' }
+BridgeCache >> definedEntity: aStub [
+	"returns the defined entity of the given stub found in any model. returns nil if value isn't in cache"
+
+	enabled ifFalse: [ ^ nil ].
+
+	"should be only one, but cache structure needs to change anyway so it'll be changed"
+	^ cacheHashTable at: aStub mooseName ifPresent: [ :mme |
+			  mme definedEntities
+				  ifEmpty: [ nil ]
+				  ifNotEmpty: [ mme definedEntities anyOne ] ]
 ]
 
 { #category : 'accessing cache' }
@@ -122,6 +146,15 @@ BridgeCache >> initialize [
 	
 	cacheHashTable := HashTable new.
 	enabled := true
+]
+
+{ #category : 'testing' }
+BridgeCache >> isIn: mooseName [
+
+	| isIn |
+	isIn := false.
+	cacheHashTable at: mooseName ifPresent: [ :e | isIn := true ].
+	^ isIn
 ]
 
 { #category : 'as yet unclassified' }

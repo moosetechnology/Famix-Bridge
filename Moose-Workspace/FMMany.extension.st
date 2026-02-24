@@ -7,9 +7,9 @@ FMMany >> checkForNoResult: readReturnValue [
 ]
 
 { #category : '*Moose-Workspace' }
-FMMany >> findVersionsOfEntity: anObject [
+FMMany >> getVersionsOfEntity: anObject [
 	
-	^ anObject findAllVersionsOfEntity 
+	^ anObject getAllVersionsOfEntity 
 ]
 
 { #category : '*Moose-Workspace' }
@@ -29,11 +29,11 @@ FMMany >> read: anObject [
 FMMany >> readResolveAndMergeResults: anObject [
 "For a FMMany slot, return the composition of the results of reading this slot for every version of the entity"
 	| receiverEntities |
-	receiverEntities := self findVersionsOfEntity: anObject.
+	receiverEntities := self getVersionsOfEntity: anObject.
 
 	^ receiverEntities isCollection
 		  ifTrue: [ self readAndMergeResults: receiverEntities ]
-		  ifFalse: [ self resolveResult: (super read: receiverEntities) ]
+		  ifFalse: [ super read: receiverEntities ]
 ]
 
 { #category : '*Moose-Workspace' }
@@ -44,7 +44,7 @@ FMMany >> resolveResult: aCollection [
 
 	^ aCollection collect: [ :stub |
 		  | resolvedEntity |
-		  resolvedEntity := stub resolveStub.
+		  resolvedEntity := stub getResolvedStub.
 		  resolvedEntity
 			  ifNotNil: [
 			  resolvedEntity "stub was resolved, store resolved entity" ]

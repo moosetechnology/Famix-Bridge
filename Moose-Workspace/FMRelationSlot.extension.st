@@ -7,31 +7,27 @@ FMRelationSlot >> checkForNoResult: readReturnValue [
 ]
 
 { #category : '*Moose-Workspace' }
-FMRelationSlot >> findVersionsOfEntity: anObject [
-
-	self subclassResponsibility
-]
-
-{ #category : '*Moose-Workspace' }
 FMRelationSlot >> readAndMergeResults: receiverEntities [
 
-	| results |
-	results := OrderedCollection new. "FMSlotMultivalueLink is a subclass of OrderedCollection, so it should be fine to use it here? Not ideal though"
+	| results mooseName |
+	results := OrderedCollection new. "FMSlotMultivalueLink is a subclass of OrderedCollection, so it should be fine to use it here? Maybe not ideal though"
+	mooseName := receiverEntities anyOne mooseName.
 	receiverEntities do: [ :r |
 			| entityRes |
+			"using a collection here to allow duplicates if they come from the same view of an entity"	
 			entityRes := OrderedCollection new.
 			(super read: r) do: [ :res |
 					res isAssociation
-						ifTrue: [ "using a collection here to allow duplicates if they come from the same view of an entity"
+						ifTrue: [ 							
 								res source = r
 									ifTrue: [
-										(res equivalentTargetFoundIn: results) ifFalse: [
+										(mooseName equivalentTargetFoundIn: results) ifFalse: [
 											entityRes add: res ] ]
 									ifFalse: [
-										(res equivalentSourceFoundIn: results) ifFalse: [
+										(mooseName equivalentSourceFoundIn: results) ifFalse: [
 											entityRes add: res ] ] ]
 						ifFalse: [
-						(res equivalentFoundIn: results) ifFalse: [ entityRes add: res ] ] ].
+						(mooseName equivalentFoundIn: results) ifFalse: [ entityRes add: res ] ] ].
 			results addAll: entityRes ].
 
 	^ results
@@ -82,12 +78,7 @@ FMRelationSlot >> readAndResolveOnNoResult: anObject [
 { #category : '*Moose-Workspace' }
 FMRelationSlot >> readResolveAndMergeResults: anObject [
 
-	| receiverEntities |
-	receiverEntities := self findVersionsOfEntity: anObject.
-
-	^ receiverEntities isCollection
-		  ifTrue: [ self readAndMergeResults: receiverEntities ]
-		  ifFalse: [ self resolveResult: (super read: receiverEntities) ]
+	self subclassResponsibility 
 ]
 
 { #category : '*Moose-Workspace' }

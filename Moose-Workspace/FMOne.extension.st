@@ -7,18 +7,6 @@ FMOne >> checkForNoResult: readReturnValue [
 ]
 
 { #category : '*Moose-Workspace' }
-FMOne >> findVersionsOfEntity: anObject [
-
-	"^ anObject" 
-
-	"calling this method with the code here after triggers an infinite loop (due to calling mooseNameOn: for caching purposes, which calls the parent entity)"
-
-	anObject isStub ifFalse: [ ^ anObject ].
-	
-	^ anObject resolveStub ifNil: [ anObject ]
-]
-
-{ #category : '*Moose-Workspace' }
 FMOne >> read: anObject [
 
 	anObject canBeStub ifFalse: [ ^ super read: anObject ].
@@ -40,7 +28,7 @@ FMOne >> resolveResult: anObject [
 	| resolvedEntity |
 	anObject ifNil: [ ^ nil ].
 
-	resolvedEntity := anObject resolveStub.
+	resolvedEntity := anObject getResolvedStub.
 	^ resolvedEntity 
 		ifNotNil: [ resolvedEntity ] "stub was resolved, return resolved entity"
 		ifNil: [ anObject ] "stub was not resolved, return stub entity"
