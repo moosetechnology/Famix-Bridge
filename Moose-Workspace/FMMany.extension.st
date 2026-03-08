@@ -16,7 +16,9 @@ FMMany >> getVersionsOfEntity: anObject [
 FMMany >> read: anObject [
 
 	| workspace |
-	anObject canBeStub ifFalse: [ ^ super read: anObject ].
+	"If I can be a stub or if I am an association, I need resolving"
+	(anObject canBeStub or: [ anObject isAssociation ]) ifFalse: [
+		^ super read: anObject ].
 
 	workspace := ActiveMooseWorkspace value.
 	^ (workspace interModelModeActive and: [
@@ -33,7 +35,7 @@ FMMany >> readResolveAndMergeResults: anObject [
 
 	^ receiverEntities isCollection
 		  ifTrue: [ self readAndMergeResults: receiverEntities ]
-		  ifFalse: [ super read: receiverEntities ]
+		  ifFalse: [ self readAndResolveIfStubResult: receiverEntities ]
 ]
 
 { #category : '*Moose-Workspace' }

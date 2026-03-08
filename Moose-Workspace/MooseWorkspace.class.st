@@ -32,6 +32,13 @@ MooseWorkspace >> addLibraryModel: aMooseModel [
 	models add: aMooseModel 
 ]
 
+{ #category : 'as yet unclassified' }
+MooseWorkspace >> clearCache [
+	
+	FamixBridgeTool instance clearCache
+	
+]
+
 { #category : 'adding - removing' }
 MooseWorkspace >> clearLibrairiesModel [
 	| mainModel |
