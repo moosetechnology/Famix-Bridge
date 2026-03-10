@@ -48,6 +48,20 @@ FamixBridgeTool >> allWorkspaceModelsButSourceModel [
 	^ workspace models reject: [ :m | m = sourceModel ]
 ]
 
+{ #category : 'as yet unclassified' }
+FamixBridgeTool >> cacheModelPackagesFor: aMooseWorkspace [
+	"packages can also be shared, with multiple defined versions"
+
+	aMooseWorkspace models do: [ :m |
+			m allModelPackages do: [ :p |
+					| allVersions grouped |
+					allVersions := p
+						               findAllVersionsOfEntityWithMultipleDefinedEntities.
+					grouped := allVersions groupedBy: [ :e | e mooseModel mooseID ].
+					(allVersions size > 1 and: [ grouped size > 1 ]) ifTrue: [
+						cache createEntryForEntities: allVersions ] ] ]
+]
+
 { #category : 'cache management' }
 FamixBridgeTool >> clearCache [ 
 
@@ -128,8 +142,10 @@ FamixBridgeTool >> findStubs: entity withinModels: modelsToSearch [
 			searchResult := self findStub: entity inModel: m.
 			searchResult ifNotNil: [ stubList add: searchResult ] ].
 
+	stubList isEmpty ifTrue: [ ^ stubList ].
+
 	(stubList size > 1 or: [ cache definedEntityExists: stubList anyOne ])
-		ifTrue: [ cache addStubEntities: stubList ].
+		ifTrue: [ "cache addStubEntities: stubList" ].
 
 	^ stubList
 ]
@@ -146,12 +162,22 @@ FamixBridgeTool >> findStubsOf: entity [
 { #category : 'as yet unclassified' }
 FamixBridgeTool >> fullMMECacheFor: aMooseWorkspace [
 
+	| classesToReject |
+	classesToReject := { FamixJavaImplicitVariable }.
+
 	aMooseWorkspace models do: [ :m |
 			| stubs |
 			aMooseWorkspace interModelModeActive: false.
-			stubs := m entities select: [ :e | e isStub ].
+			stubs := (m entities reject: [ :e |
+				          classesToReject includes: e class ]) select: [ :e |
+				         e isStub ]. 
 			aMooseWorkspace interModelModeActive: true.
-			stubs do: [ :s | s findAllVersionsOfEntity ] ]
+			stubs do: [ :s |
+					| allVersions grouped |
+					allVersions := s findAllVersionsOfEntity.
+					grouped := allVersions groupedBy: [ :e | e mooseModel mooseID ].
+					(allVersions size > 1 and: [ grouped size > 1 ]) ifTrue: [
+							cache createEntryForEntities: allVersions ] ] ]
 ]
 
 { #category : 'as yet unclassified' }
@@ -195,6 +221,8 @@ FamixBridgeTool >> removeDuplicatesEntitiesOf: anOrderedCollection [
 FamixBridgeTool >> searchEntity: entity inModel: resourceModel [
 
 	| parentsList currentSearchResult |
+	ActiveMooseWorkspace value interModelModeActive: false.
+	
 	parentsList := entity allContainers.
 	parentsList	addFirst: entity.
 	parentsList := parentsList reverse.
@@ -209,6 +237,8 @@ FamixBridgeTool >> searchEntity: entity inModel: resourceModel [
 				                       find: p
 				                       amongChildrenOf: currentSearchResult.
 			currentSearchResult ifNil: [ ^ nil ] ].
+		
+	ActiveMooseWorkspace value interModelModeActive: true.
 
 	^ currentSearchResult
 ]
@@ -224,7 +254,7 @@ FamixBridgeTool >> searchResource: stub inModel: resourceModel [
 	^ searchResult ifNotNil: [
 			  searchResult isStub not
 				  ifTrue: [
-						  cache addDefinedEntity: searchResult.
+						  "cache addDefinedEntity: searchResult."
 						  searchResult ]
 				  ifFalse: [ nil ] ]
 ]

@@ -9,11 +9,14 @@ FMOne >> checkForNoResult: readReturnValue [
 { #category : '*Moose-Workspace' }
 FMOne >> read: anObject [
 
+	| workspace |
 	"If I can be a stub or if I am an association, I need resolving"
 	(anObject canBeStub or: [ anObject isAssociation ]) ifFalse: [
 		^ super read: anObject ].
 
-	^ ActiveMooseWorkspace value interModelModeActive
+	workspace := ActiveMooseWorkspace value.
+	^ (workspace interModelModeActive and: [
+		   workspace models includes: anObject mooseModel ])
 		  ifTrue: [ self readResolveAndMergeResults: anObject ]
 		  ifFalse: [ super read: anObject ]
 ]

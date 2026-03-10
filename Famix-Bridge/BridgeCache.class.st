@@ -78,6 +78,13 @@ BridgeCache >> clearCache [
 	cacheHashTable := HashTable new
 ]
 
+{ #category : 'as yet unclassified' }
+BridgeCache >> createEntryForEntities: aCollection [ 
+	| key |
+	key := aCollection anyOne mooseName.
+	cacheHashTable at: key ifAbsentPut: [ MultiModelEntity forEntities: aCollection ]
+]
+
 { #category : 'accessing cache' }
 BridgeCache >> definedEntity: aStub [
 	"returns the defined entity of the given stub found in any model. returns nil if value isn't in cache"

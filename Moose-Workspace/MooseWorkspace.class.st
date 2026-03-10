@@ -54,7 +54,8 @@ MooseWorkspace >> createFullMMECache [
 	FamixBridgeTool instance enableCache.
 
 	self interModelModeDuring: [
-		FamixBridgeTool instance fullMMECacheFor: self ]
+		FamixBridgeTool instance fullMMECacheFor: self.
+		FamixBridgeTool instance cacheModelPackagesFor: self ]
 ]
 
 { #category : 'initialization' }
@@ -129,6 +130,30 @@ MooseWorkspace >> removePreviousMainModelAndSetMainModel: anObject [
 
 	models remove: self mainModel.
 	self simpleSetMainModel: anObject
+]
+
+{ #category : 'accessing' }
+MooseWorkspace >> rootEntities [
+
+	| rootEntities |
+	self interModelModeActive: false.
+
+	rootEntities := OrderedCollection new.
+	rootEntities := self models asOrderedCollection first rootEntities.
+
+	self models asOrderedCollection allButFirst do: [ :m |
+			rootEntities addAll: (m rootEntities select: [ :e |
+					 rootEntities noneSatisfy: [ :ee | ee mooseName = e mooseName ] ]) ].
+
+	self interModelModeActive: true.
+
+	^ rootEntities collect: [ :e |
+			  e canBeStub
+				  ifTrue: [
+						  | resolveAttempt |
+						  resolveAttempt := e getResolvedStub.
+						  resolveAttempt ifNotNil: [ resolveAttempt ] ifNil: [ e ] ]
+				  ifFalse: [ e ] ]
 ]
 
 { #category : 'accessing' }

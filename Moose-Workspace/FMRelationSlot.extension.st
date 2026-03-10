@@ -9,9 +9,11 @@ FMRelationSlot >> checkForNoResult: readReturnValue [
 { #category : '*Moose-Workspace' }
 FMRelationSlot >> readAndMergeResults: receiverEntities [
 
-	| results mooseNames isAssoc isSource readResults |
+	| results mooseNames receiverMooseName isAssoc isSource readResults |
 	results := OrderedCollection new. "FMSlotMultivalueLink is a subclass of OrderedCollection, so it should be fine to use it here? Maybe not ideal though"
 	mooseNames := OrderedCollection new.
+	
+	receiverMooseName := receiverEntities anyOne bridgeMooseName.
 	isAssoc := self targetClass usesTrait: FamixTAssociation.
 	isSource := false.
 
@@ -22,7 +24,7 @@ FMRelationSlot >> readAndMergeResults: receiverEntities [
 			readResults := super read: r.
 			isAssoc and: [
 				readResults ifNotEmpty: [
-					isSource := readResults anyOne source = r ] ].
+					isSource := readResults anyOne source bridgeMooseName = receiverMooseName ] ].
 			newMooseNames := OrderedCollection new.
 			readResults do: [ :res |
 					isAssoc
