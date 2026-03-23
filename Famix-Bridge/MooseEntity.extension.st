@@ -16,6 +16,18 @@ MooseEntity >> findAllVersionsOfEntity [
 ]
 
 { #category : '*Famix-Bridge' }
+MooseEntity >> findAllVersionsOfEntityWithMultipleDefinedEntities [
+
+	| allVersions |
+	allVersions := OrderedCollection new.
+	ActiveMooseWorkspace value models do: [ :m |
+			| res |
+			res := FamixBridgeTool instance searchEntity: self inModel: m.
+			res ifNotNil: [ allVersions add: res ] ].
+	^ allVersions
+]
+
+{ #category : '*Famix-Bridge' }
 MooseEntity >> findStubsOfEntity [
 	
 	^ FamixBridgeTool instance findStubsOf: self
