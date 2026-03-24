@@ -19,7 +19,8 @@ Class {
 	#classTraits : 'MooseTWorkspace classTrait',
 	#instVars : [
 		'models',
-		'stubResolverStrategy'
+		'stubResolverStrategy',
+		'workspaceCache'
 	],
 	#category : 'Moose-Workspace-Core',
 	#package : 'Moose-Workspace',
@@ -30,6 +31,15 @@ Class {
 MooseWorkspace >> addLibraryModel: aMooseModel [
 
 	models add: aMooseModel 
+]
+
+{ #category : 'accessing' }
+MooseWorkspace >> at: anEntity at: aSlot ifAbsentPut: aFullBlockClosure [ 
+	
+	^ (self workspaceCache
+		at: anEntity
+		ifAbsentPut: [ IdentityDictionary new ])
+			at: aSlot ifAbsentPut: aFullBlockClosure
 ]
 
 { #category : 'as yet unclassified' }
@@ -64,10 +74,17 @@ MooseWorkspace >> defaultStubResolverStrategy [
 	^ ResolveAndMergeResultsStrategy new
 ]
 
+{ #category : 'as yet unclassified' }
+MooseWorkspace >> flushWorkspaceCache [
+
+	workspaceCache removeAll
+]
+
 { #category : 'initialization' }
 MooseWorkspace >> initialize [ 
 	super initialize.
 	
+	workspaceCache := IdentityDictionary new.
 	stubResolverStrategy := self defaultStubResolverStrategy.
 	models := Set new.
 ]
@@ -178,4 +195,10 @@ MooseWorkspace >> stubResolverStrategy [
 MooseWorkspace >> stubResolverStrategy: anObject [
 
 	stubResolverStrategy := anObject
+]
+
+{ #category : 'as yet unclassified' }
+MooseWorkspace >> workspaceCache [
+	
+	^ workspaceCache
 ]

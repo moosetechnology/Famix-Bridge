@@ -17,7 +17,11 @@ FMOne >> read: anObject [
 	workspace := ActiveMooseWorkspace value.
 	^ (workspace interModelModeActive and: [
 		   workspace models includes: anObject mooseModel ])
-		  ifTrue: [ self readResolveAndMergeResults: anObject ]
+		  ifTrue: [
+				  workspace
+					  at: anObject
+					  at: self
+					  ifAbsentPut: [ self readResolveAndMergeResults: anObject ] ]
 		  ifFalse: [ super read: anObject ]
 ]
 
