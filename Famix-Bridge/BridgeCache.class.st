@@ -35,6 +35,20 @@ BridgeCache >> addDefinedEntity: anEntity [
 ]
 
 { #category : 'testing' }
+BridgeCache >> addStubEntities: stubList [
+
+	| value |
+	enabled ifFalse: [ ^ self ].
+	
+	value := cacheHashTable
+		         at: stubList anyOne mooseName
+		         ifAbsentPut: [ MultiModelEntity new ].
+	
+	stubList do: [ :stub | value addStubEntity: stub ]
+	
+]
+
+{ #category : 'testing' }
 BridgeCache >> addStubEntity: aStub [
 
 	| value |
@@ -47,10 +61,41 @@ BridgeCache >> addStubEntity: aStub [
 	value addStubEntity: aStub
 ]
 
+{ #category : 'accessing cache' }
+BridgeCache >> allVersionsOf: entity [ 
+	"returns the defined entity of the given stub found in any model. returns nil if value isn't in cache"
+
+	enabled ifFalse: [ ^ nil ].
+
+	"should be only one, but cache structure needs to change anyway so it'll be changed"
+	^ cacheHashTable at: entity mooseName ifPresent: [ :mme |
+		  mme allVersions ]
+]
+
 { #category : 'as yet unclassified' }
 BridgeCache >> clearCache [
 
 	cacheHashTable := HashTable new
+]
+
+{ #category : 'as yet unclassified' }
+BridgeCache >> createEntryForEntities: aCollection [ 
+	| key |
+	key := aCollection anyOne mooseName.
+	cacheHashTable at: key ifAbsentPut: [ MultiModelEntity forEntities: aCollection ]
+]
+
+{ #category : 'accessing cache' }
+BridgeCache >> definedEntity: aStub [
+	"returns the defined entity of the given stub found in any model. returns nil if value isn't in cache"
+
+	enabled ifFalse: [ ^ nil ].
+
+	"should be only one, but cache structure needs to change anyway so it'll be changed"
+	^ cacheHashTable at: aStub mooseName ifPresent: [ :mme |
+			  mme definedEntities
+				  ifEmpty: [ nil ]
+				  ifNotEmpty: [ mme definedEntities anyOne ] ]
 ]
 
 { #category : 'accessing cache' }
@@ -63,6 +108,20 @@ BridgeCache >> definedEntity: aStub inModel: aMooseModel [
 		  mme definedEntities
 			  at: aMooseModel mooseID
 			  ifPresent: [ :entity | entity ] ]
+]
+
+{ #category : 'accessing cache' }
+BridgeCache >> definedEntityExists: aStub [
+	"returns true if a defined entity exists for this stub"
+
+	| res |
+	enabled ifFalse: [ ^ nil ].
+
+	res := cacheHashTable
+		       at: aStub mooseName
+		       ifPresent: [ :mme | mme definedEntities isNotEmpty ].
+
+	^ res ifNil: [ false ] ifNotNil: [ res ]
 ]
 
 { #category : 'accessing' }
@@ -83,11 +142,26 @@ BridgeCache >> enabled [
 	^ enabled
 ]
 
+{ #category : 'as yet unclassified' }
+BridgeCache >> getDuplicatesFrom: aMooseWorkspace [
+
+	^ cacheHashTable flatCollect: [ :value | value stubEntities values ]
+]
+
 { #category : 'initialization' }
 BridgeCache >> initialize [ 
 	
 	cacheHashTable := HashTable new.
 	enabled := true
+]
+
+{ #category : 'testing' }
+BridgeCache >> isIn: mooseName [
+
+	| isIn |
+	isIn := false.
+	cacheHashTable at: mooseName ifPresent: [ :e | isIn := true ].
+	^ isIn
 ]
 
 { #category : 'as yet unclassified' }

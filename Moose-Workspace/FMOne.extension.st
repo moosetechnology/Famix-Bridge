@@ -7,15 +7,24 @@ FMOne >> checkForNoResult: readReturnValue [
 ]
 
 { #category : '*Moose-Workspace' }
-FMOne >> findVersionsOfEntity: anObject [
+FMOne >> read: anObject [
 
-	"^ anObject" 
+	| workspace |
+	"If I can be a stub or if I am an association, I need resolving"
+	(anObject canBeStub or: [ anObject isAssociation ]) ifFalse: [
+		^ super read: anObject ].
 
-	"calling this method with the code here after triggers an infinite loop (due to calling mooseNameOn: for caching purposes, which calls the parent entity)"
+	workspace := ActiveMooseWorkspace value.
+	^ (workspace interModelModeActive and: [
+		   workspace models includes: anObject mooseModel ])
+		  ifTrue: [ self readResolveAndMergeResults: anObject ]
+		  ifFalse: [ super read: anObject ]
+]
 
-	anObject isStub ifFalse: [ ^ anObject ].
-	
-	^ anObject resolveStub ifNil: [ anObject ]
+{ #category : '*Moose-Workspace' }
+FMOne >> readResolveAndMergeResults: anObject [
+"For a FMOne slot, return (if it exists) the defined entity"
+	^ self resolveResult: (super read: anObject) 
 ]
 
 { #category : '*Moose-Workspace' }
@@ -24,7 +33,7 @@ FMOne >> resolveResult: anObject [
 	| resolvedEntity |
 	anObject ifNil: [ ^ nil ].
 
-	resolvedEntity := anObject resolveStub.
+	resolvedEntity := anObject getResolvedStub.
 	^ resolvedEntity 
 		ifNotNil: [ resolvedEntity ] "stub was resolved, return resolved entity"
 		ifNil: [ anObject ] "stub was not resolved, return stub entity"

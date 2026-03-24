@@ -18,6 +18,22 @@ Class {
 	#package : 'Famix-Bridge'
 }
 
+{ #category : 'as yet unclassified' }
+MultiModelEntity class >> forEntities: aCollection [
+
+	| definedEntities newMME |
+	definedEntities := aCollection
+		                 select: [ :e | e isStub not ].
+
+	newMME := self new.
+	definedEntities ifNotEmpty: [
+			aCollection removeAll: definedEntities.
+			newMME addDefinedEntities: definedEntities ].
+	newMME addStubEntities: aCollection.
+
+	^ newMME
+]
+
 { #category : 'instance creation' }
 MultiModelEntity class >> newForDeclaredEntity: anEntity [
 
@@ -35,6 +51,12 @@ MultiModelEntity class >> newForStub: aStub [
 ]
 
 { #category : 'adding' }
+MultiModelEntity >> addDefinedEntities: aCollection [
+
+	aCollection do: [ :e | self addDefinedEntity: e ]
+]
+
+{ #category : 'adding' }
 MultiModelEntity >> addDefinedEntity: anEntity [
 
 	definedEntities at: anEntity mooseModel mooseID put: anEntity.
@@ -42,10 +64,26 @@ MultiModelEntity >> addDefinedEntity: anEntity [
 ]
 
 { #category : 'adding' }
+MultiModelEntity >> addStubEntities: aCollection [
+
+	aCollection do: [ :e | self addStubEntity: e ]
+]
+
+{ #category : 'adding' }
 MultiModelEntity >> addStubEntity: anEntity [
 
 	stubEntities at: anEntity mooseModel mooseID put: anEntity.
 	searchedModels add: anEntity mooseModel mooseID
+]
+
+{ #category : 'as yet unclassified' }
+MultiModelEntity >> allVersions [ 
+
+	| versions |
+	versions := OrderedCollection new.
+	versions addAll: definedEntities values.
+	versions addAll: stubEntities values.
+	^ versions
 ]
 
 { #category : 'accessing' }

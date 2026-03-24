@@ -7,28 +7,47 @@ FMRelationSlot >> checkForNoResult: readReturnValue [
 ]
 
 { #category : '*Moose-Workspace' }
-FMRelationSlot >> findVersionsOfEntity: anObject [
-
-	self subclassResponsibility
-]
-
-{ #category : '*Moose-Workspace' }
-FMRelationSlot >> read: anObject [
-
-	anObject canBeStub ifFalse: [ ^ super read: anObject ].
-
-	^ ActiveMooseWorkspace value interModelModeActive
-		  ifTrue: [ ActiveMooseWorkspace value slot: self read: anObject ]
-		  ifFalse: [ super read: anObject ]
-]
-
-{ #category : '*Moose-Workspace' }
 FMRelationSlot >> readAndMergeResults: receiverEntities [
 
-	| results | 
-	results := OrderedCollection new. "FMSlotMultivalueLink is a subclass of OrderedCollection, so it should be fine to use it here? Not ideal though"
-	receiverEntities do: [ :r | results addAll: (super read: r) ].
+	| results mooseNames receiverMooseName isAssoc isSource readResults |
+	results := OrderedCollection new. "FMSlotMultivalueLink is a subclass of OrderedCollection, so it should be fine to use it here? Maybe not ideal though"
+	mooseNames := OrderedCollection new.
 	
+	receiverMooseName := receiverEntities anyOne bridgeMooseName.
+	isAssoc := self targetClass usesTrait: FamixTAssociation.
+	isSource := false.
+
+	receiverEntities do: [ :r |
+			| entityRes newMooseNames |
+			"using a collection here to allow duplicates if they come from the same view of an entity"
+			entityRes := OrderedCollection new.
+			readResults := super read: r.
+			isAssoc and: [
+				readResults ifNotEmpty: [
+					isSource := readResults anyOne source bridgeMooseName = receiverMooseName ] ].
+			newMooseNames := OrderedCollection new.
+			readResults do: [ :res |
+					isAssoc
+						ifTrue: [
+								isSource
+									ifTrue: [
+											(res
+												 equivalentTargetFoundIn: mooseNames
+												 addingToMooseNames: newMooseNames) ifFalse: [
+												entityRes add: res ] ]
+									ifFalse: [
+											(res
+												 equivalentSourceFoundIn: mooseNames
+												 addingToMooseNames: newMooseNames) ifFalse: [
+												entityRes add: res ] ] ]
+						ifFalse: [
+								(res
+									 equivalentFoundIn: mooseNames
+									 addingToMooseNames: newMooseNames) ifFalse: [
+									entityRes add: res ] ] ].
+			mooseNames addAll: newMooseNames.
+			results addAll: entityRes ].
+
 	^ results
 ]
 
@@ -77,12 +96,7 @@ FMRelationSlot >> readAndResolveOnNoResult: anObject [
 { #category : '*Moose-Workspace' }
 FMRelationSlot >> readResolveAndMergeResults: anObject [
 
-	| receiverEntities |
-	receiverEntities := self findVersionsOfEntity: anObject.
-
-	^ receiverEntities isCollection
-		  ifTrue: [ self readAndMergeResults: receiverEntities ]
-		  ifFalse: [ self resolveResult: (super read: receiverEntities) ]
+	self subclassResponsibility 
 ]
 
 { #category : '*Moose-Workspace' }

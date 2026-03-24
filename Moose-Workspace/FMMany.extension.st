@@ -7,9 +7,35 @@ FMMany >> checkForNoResult: readReturnValue [
 ]
 
 { #category : '*Moose-Workspace' }
-FMMany >> findVersionsOfEntity: anObject [
+FMMany >> getVersionsOfEntity: anObject [
 	
-	^ anObject findAllVersionsOfEntity 
+	^ anObject getAllVersionsOfEntity 
+]
+
+{ #category : '*Moose-Workspace' }
+FMMany >> read: anObject [
+
+	| workspace |
+	"If I can be a stub or if I am an association, I need resolving"
+	(anObject canBeStub or: [ anObject isAssociation ]) ifFalse: [
+		^ super read: anObject ].
+
+	workspace := ActiveMooseWorkspace value.
+	^ (workspace interModelModeActive and: [
+		   workspace models includes: anObject mooseModel ])
+		  ifTrue: [ self readResolveAndMergeResults: anObject ]
+		  ifFalse: [ super read: anObject ]
+]
+
+{ #category : '*Moose-Workspace' }
+FMMany >> readResolveAndMergeResults: anObject [
+"For a FMMany slot, return the composition of the results of reading this slot for every version of the entity"
+	| receiverEntities |
+	receiverEntities := self getVersionsOfEntity: anObject.
+
+	^ receiverEntities isCollection
+		  ifTrue: [ self readAndMergeResults: receiverEntities ]
+		  ifFalse: [ self readAndResolveIfStubResult: receiverEntities ]
 ]
 
 { #category : '*Moose-Workspace' }
@@ -20,7 +46,7 @@ FMMany >> resolveResult: aCollection [
 
 	^ aCollection collect: [ :stub |
 		  | resolvedEntity |
-		  resolvedEntity := stub resolveStub.
+		  resolvedEntity := stub getResolvedStub.
 		  resolvedEntity
 			  ifNotNil: [
 			  resolvedEntity "stub was resolved, store resolved entity" ]

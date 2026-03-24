@@ -41,19 +41,25 @@ FamixBridgeTool class >> onModel: sourceModel [
 ]
 
 { #category : 'selecting models' }
-FamixBridgeTool >> allModelsButSourceModel [
-
-	^ MooseModel root entities reject: [ :m | m = sourceModel ]
-]
-
-{ #category : 'selecting models' }
 FamixBridgeTool >> allWorkspaceModelsButSourceModel [
 
 	| workspace |
-	"this method is only called when there is an active workspace, so no checks are done"
 	workspace := ActiveMooseWorkspace value.
-
 	^ workspace models reject: [ :m | m = sourceModel ]
+]
+
+{ #category : 'as yet unclassified' }
+FamixBridgeTool >> cacheModelPackagesFor: aMooseWorkspace [
+	"packages can also be shared, with multiple defined versions"
+
+	aMooseWorkspace models do: [ :m |
+			m allModelPackages do: [ :p |
+					| allVersions grouped |
+					allVersions := p
+						               findAllVersionsOfEntityWithMultipleDefinedEntities.
+					grouped := allVersions groupedBy: [ :e | e mooseModel mooseID ].
+					(allVersions size > 1 and: [ grouped size > 1 ]) ifTrue: [
+						cache createEntryForEntities: allVersions ] ] ]
 ]
 
 { #category : 'cache management' }
@@ -81,8 +87,8 @@ FamixBridgeTool >> find: stubEntity amongChildrenOf: currentSearchResult [
 	- We use a #do: instead of a detect: to not have to build the full contained entities list in case we find the right result in the first entities"
 
 	| name |
-	name := stubEntity name.
-	currentSearchResult containedEntitiesDo: [ :child | (child class = stubEntity class and: [ child name = name ]) ifTrue: [ ^ child ] ].
+	name := stubEntity mooseName.
+	currentSearchResult containedEntitiesDo: [ :child | (child class = stubEntity class and: [ child mooseName = name ]) ifTrue: [ ^ child ] ].
 
 	^ nil
 ]
@@ -91,7 +97,9 @@ FamixBridgeTool >> find: stubEntity amongChildrenOf: currentSearchResult [
 FamixBridgeTool >> findResource: stub [
 
 	sourceModel := stub mooseModel.
-	^ self findResourceWithinWorkspace: stub
+	^ self
+		  findResource: stub
+		  withinModels: self allWorkspaceModelsButSourceModel
 ]
 
 { #category : 'searching resources' }
@@ -114,19 +122,6 @@ FamixBridgeTool >> findResource: stub withinModels: modelsToSearch [
 	^ stub
 ]
 
-{ #category : 'searching resources' }
-FamixBridgeTool >> findResourceLookingThroughAllModels: stub [
-	"TODO : consider the possibility of results in several models and modify as needed"
-
-	^ self findResource: stub withinModels: self allModelsButSourceModel
-]
-
-{ #category : 'searching resources' }
-FamixBridgeTool >> findResourceWithinWorkspace: stub [
-		
-	^ self findResource: stub withinModels: self allWorkspaceModelsButSourceModel
-]
-
 { #category : 'searching stubs' }
 FamixBridgeTool >> findStub: entity inModel: resourceModel [
 
@@ -136,40 +131,69 @@ FamixBridgeTool >> findStub: entity inModel: resourceModel [
 ]
 
 { #category : 'searching stubs' }
-FamixBridgeTool >> findStubs: stub withinModels: modelsToSearch [
+FamixBridgeTool >> findStubs: entity withinModels: modelsToSearch [
 
 	| stubList |
 	stubList := OrderedCollection new.
-	
+	entity isStub ifTrue: [ stubList add: entity ].
+
 	modelsToSearch do: [ :m |
-		| searchResult |
-		searchResult := self findStub: stub inModel: m.
-		searchResult ifNotNil: [ stubList add: searchResult ] ].
+			| searchResult |
+			searchResult := self findStub: entity inModel: m.
+			searchResult ifNotNil: [ stubList add: searchResult ] ].
 
-	^ stubList 
-]
+	stubList isEmpty ifTrue: [ ^ stubList ].
 
-{ #category : 'searching stubs' }
-FamixBridgeTool >> findStubsLookingThroughAllModels: entity [
-	"TODO : consider the possibility of results in several models and modify as needed"
+	(stubList size > 1 or: [ cache definedEntityExists: stubList anyOne ])
+		ifTrue: [ "cache addStubEntities: stubList" ].
 
-	^ self findStubs: entity withinModels: self allModelsButSourceModel
+	^ stubList
 ]
 
 { #category : 'searching stubs' }
 FamixBridgeTool >> findStubsOf: entity [
-	"TODO : consider the possibility of results in several models and modify as needed"
-	sourceModel := entity mooseModel.
 
-	^ ActiveMooseWorkspace value interModelModeActive 
-		  ifTrue: [ self findStubsWithinWorkspace: entity ]
-		  ifFalse: [ self findStubsLookingThroughAllModels: entity ]
+	sourceModel := entity mooseModel.
+	^ self
+		  findStubs: entity
+		  withinModels: self allWorkspaceModelsButSourceModel
 ]
 
-{ #category : 'searching stubs' }
-FamixBridgeTool >> findStubsWithinWorkspace: entity [
-		
-	^ self findStubs: entity withinModels: self allWorkspaceModelsButSourceModel
+{ #category : 'as yet unclassified' }
+FamixBridgeTool >> fullMMECacheFor: aMooseWorkspace [
+
+	| classesToReject |
+	classesToReject := { FamixJavaImplicitVariable }.
+
+	aMooseWorkspace models do: [ :m |
+			| stubs |
+			aMooseWorkspace interModelModeActive: false.
+			stubs := (m entities reject: [ :e |
+				          classesToReject includes: e class ]) select: [ :e |
+				         e isStub ]. 
+			aMooseWorkspace interModelModeActive: true.
+			stubs do: [ :s |
+					| allVersions grouped |
+					allVersions := s findAllVersionsOfEntity.
+					grouped := allVersions groupedBy: [ :e | e mooseModel mooseID ].
+					(allVersions size > 1 and: [ grouped size > 1 ]) ifTrue: [
+							cache createEntryForEntities: allVersions ] ] ]
+]
+
+{ #category : 'as yet unclassified' }
+FamixBridgeTool >> getAllVersionsOfEntity: entity [
+
+	^ (cache allVersionsOf: entity)
+		  ifNotNil: [ :entities | entities ]
+		  ifNil: [ entity ]
+]
+
+{ #category : 'as yet unclassified' }
+FamixBridgeTool >> getResource: stub [
+
+	^ (cache definedEntity: stub)
+		  ifNotNil: [ :entity | entity ]
+		  ifNil: [ nil ]
 ]
 
 { #category : 'initialization' }
@@ -184,25 +208,39 @@ FamixBridgeTool >> isCacheEnabled [
 	^ cache enabled
 ]
 
+{ #category : 'removing' }
+FamixBridgeTool >> removeDuplicatesEntitiesOf: anOrderedCollection [
+
+	| duplicates |
+	duplicates := cache getDuplicatesFrom: ActiveMooseWorkspace value.
+	anOrderedCollection removeAllSuchThat: [ :e |
+		(cache isIn: e mooseName) and: [ duplicates includes: e ] ]
+]
+
 { #category : 'searching' }
 FamixBridgeTool >> searchEntity: entity inModel: resourceModel [
 
 	| parentsList currentSearchResult |
-	parentsList := entity allContainers reverse.
+	ActiveMooseWorkspace value interModelModeActive: false.
+	
+	parentsList := entity allContainers.
+	parentsList	addFirst: entity.
+	parentsList := parentsList reverse.
+		
 	currentSearchResult := resourceModel rootEntities
 		                       detect: [ :e |
-		                       e name = parentsList first name ]
+		                       e mooseName = parentsList first mooseName ]
 		                       ifNone: [ ^ nil ].
-			
+
 	parentsList allButFirst do: [ :p |
 			currentSearchResult := self
 				                       find: p
 				                       amongChildrenOf: currentSearchResult.
 			currentSearchResult ifNil: [ ^ nil ] ].
 		
-	^ currentSearchResult := self
-		                         find: entity
-		                         amongChildrenOf: currentSearchResult
+	ActiveMooseWorkspace value interModelModeActive: true.
+
+	^ currentSearchResult
 ]
 
 { #category : 'searching resources' }
@@ -216,7 +254,7 @@ FamixBridgeTool >> searchResource: stub inModel: resourceModel [
 	^ searchResult ifNotNil: [
 			  searchResult isStub not
 				  ifTrue: [
-						  cache addDefinedEntity: searchResult.
+						  "cache addDefinedEntity: searchResult."
 						  searchResult ]
 				  ifFalse: [ nil ] ]
 ]
@@ -232,7 +270,7 @@ FamixBridgeTool >> searchStub: entity inModel: resourceModel [
 	^ searchResult ifNotNil: [
 			  searchResult isStub
 				  ifTrue: [
-						  cache addStubEntity: searchResult.
+						  "cache addStubEntity: searchResult."
 						  searchResult ]
 				  ifFalse: [ nil ] ]
 ]

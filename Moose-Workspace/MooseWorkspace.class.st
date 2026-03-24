@@ -32,12 +32,30 @@ MooseWorkspace >> addLibraryModel: aMooseModel [
 	models add: aMooseModel 
 ]
 
+{ #category : 'as yet unclassified' }
+MooseWorkspace >> clearCache [
+	
+	FamixBridgeTool instance clearCache
+	
+]
+
 { #category : 'adding - removing' }
 MooseWorkspace >> clearLibrairiesModel [
 	| mainModel |
 	mainModel := self mainModel.
 	models := Set new.
 	mainModel ifNotNil: [ models add: mainModel ]
+]
+
+{ #category : 'as yet unclassified' }
+MooseWorkspace >> createFullMMECache [
+	
+	"making sure the cache is enabled"
+	FamixBridgeTool instance enableCache.
+
+	self interModelModeDuring: [
+		FamixBridgeTool instance fullMMECacheFor: self.
+		FamixBridgeTool instance cacheModelPackagesFor: self ]
 ]
 
 { #category : 'initialization' }
@@ -112,6 +130,30 @@ MooseWorkspace >> removePreviousMainModelAndSetMainModel: anObject [
 
 	models remove: self mainModel.
 	self simpleSetMainModel: anObject
+]
+
+{ #category : 'accessing' }
+MooseWorkspace >> rootEntities [
+
+	| rootEntities |
+	self interModelModeActive: false.
+
+	rootEntities := OrderedCollection new.
+	rootEntities := self models asOrderedCollection first rootEntities.
+
+	self models asOrderedCollection allButFirst do: [ :m |
+			rootEntities addAll: (m rootEntities select: [ :e |
+					 rootEntities noneSatisfy: [ :ee | ee mooseName = e mooseName ] ]) ].
+
+	self interModelModeActive: true.
+
+	^ rootEntities collect: [ :e |
+			  e canBeStub
+				  ifTrue: [
+						  | resolveAttempt |
+						  resolveAttempt := e getResolvedStub.
+						  resolveAttempt ifNotNil: [ resolveAttempt ] ifNil: [ e ] ]
+				  ifFalse: [ e ] ]
 ]
 
 { #category : 'accessing' }
