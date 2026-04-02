@@ -20,7 +20,8 @@ Class {
 	#instVars : [
 		'models',
 		'stubResolverStrategy',
-		'workspaceCache'
+		'workspaceCache',
+		'mmeCache'
 	],
 	#category : 'Moose-Workspace-Core',
 	#package : 'Moose-Workspace',
@@ -44,8 +45,8 @@ MooseWorkspace >> at: anEntity at: aSlot ifAbsentPut: aFullBlockClosure [
 
 { #category : 'as yet unclassified' }
 MooseWorkspace >> clearCache [
-	
-	FamixBridgeTool instance clearCache
+	"is it still necessary? until i can make sure, it'll stay"
+	mmeCache clearCache
 	
 ]
 
@@ -60,9 +61,6 @@ MooseWorkspace >> clearLibrairiesModel [
 { #category : 'as yet unclassified' }
 MooseWorkspace >> createFullMMECache [
 	
-	"making sure the cache is enabled"
-	FamixBridgeTool instance enableCache.
-
 	self interModelModeDuring: [
 		FamixBridgeTool instance fullMMECacheFor: self.
 		FamixBridgeTool instance cacheModelPackagesFor: self ]
@@ -85,6 +83,7 @@ MooseWorkspace >> initialize [
 	super initialize.
 	
 	workspaceCache := IdentityDictionary new.
+	mmeCache := BridgeCache new.
 	stubResolverStrategy := self defaultStubResolverStrategy.
 	models := Set new.
 ]
@@ -122,6 +121,12 @@ MooseWorkspace >> mainModel: anObject [
 		ifAbsent: [ ^ self simpleSetMainModel: anObject ].
 	"if present"
 	self removePreviousMainModelAndSetMainModel: anObject
+]
+
+{ #category : 'accessing' }
+MooseWorkspace >> mmeCache [
+
+	^ mmeCache 
 ]
 
 { #category : 'accessing' }

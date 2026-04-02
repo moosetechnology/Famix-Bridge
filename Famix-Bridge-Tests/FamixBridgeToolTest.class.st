@@ -44,6 +44,7 @@ FamixBridgeToolTest >> testAllWorkspaceModelsButSourceModel [
 		addLibraryModel: testResources libraryModel;
 		addLibraryModel: testResources libraryModelClone.
 
+	tool currentWorkspace: workspace.
 	tool sourceModel: workspace mainModel.
 
 	ActiveMooseWorkspace value class = NullMooseWorkspace ifFalse: [

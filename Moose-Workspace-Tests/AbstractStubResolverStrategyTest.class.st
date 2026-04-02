@@ -3,8 +3,7 @@ Class {
 	#superclass : 'TestCase',
 	#instVars : [
 		'workspace',
-		'modelResources',
-		'mustRestartCache'
+		'modelResources'
 	],
 	#category : 'Moose-Workspace-Tests',
 	#package : 'Moose-Workspace-Tests'
@@ -33,14 +32,7 @@ AbstractStubResolverStrategyTest >> setUp [
 	workspace mainModel: modelResources mainModel.
 	workspace addLibraryModel: modelResources libraryModel.
 	
-	mustRestartCache := FamixBridgeTool instance isCacheEnabled.
-	mustRestartCache ifTrue: [ FamixBridgeTool instance disableCache ]
-]
-
-{ #category : 'running' }
-AbstractStubResolverStrategyTest >> tearDown [ 
-
-	mustRestartCache ifTrue: [ FamixBridgeTool instance enableCache ]
+	workspace createFullMMECache 
 ]
 
 { #category : 'tests' }
