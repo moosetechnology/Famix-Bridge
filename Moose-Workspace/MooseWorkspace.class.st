@@ -19,7 +19,6 @@ Class {
 	#classTraits : 'MooseTWorkspace classTrait',
 	#instVars : [
 		'models',
-		'stubResolverStrategy',
 		'workspaceCache',
 		'mmeCache'
 	],
@@ -66,12 +65,6 @@ MooseWorkspace >> createFullMMECache [
 		FamixBridgeTool instance cacheModelPackagesFor: self ]
 ]
 
-{ #category : 'initialization' }
-MooseWorkspace >> defaultStubResolverStrategy [
-
-	^ ResolveAndMergeResultsStrategy new
-]
-
 { #category : 'as yet unclassified' }
 MooseWorkspace >> flushWorkspaceCache [
 
@@ -84,7 +77,6 @@ MooseWorkspace >> initialize [
 	
 	workspaceCache := IdentityDictionary new.
 	mmeCache := BridgeCache new.
-	stubResolverStrategy := self defaultStubResolverStrategy.
 	models := Set new.
 ]
 
@@ -182,24 +174,6 @@ MooseWorkspace >> rootEntities [
 MooseWorkspace >> simpleSetMainModel: anObject [
 
 	self attributeAt: #mainModel put: anObject
-]
-
-{ #category : 'meta-object-protocol' }
-MooseWorkspace >> slot: aFMRelationSlot read: anObject [
-
-	^ stubResolverStrategy slot: aFMRelationSlot read: anObject 
-]
-
-{ #category : 'accessing' }
-MooseWorkspace >> stubResolverStrategy [
-
-	^ stubResolverStrategy
-]
-
-{ #category : 'accessing' }
-MooseWorkspace >> stubResolverStrategy: anObject [
-
-	stubResolverStrategy := anObject
 ]
 
 { #category : 'as yet unclassified' }
