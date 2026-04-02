@@ -17,8 +17,9 @@ Class {
 		'cacheHashTable',
 		'enabled'
 	],
-	#category : 'Famix-Bridge',
-	#package : 'Famix-Bridge'
+	#category : 'Moose-Workspace-Core',
+	#package : 'Moose-Workspace',
+	#tag : 'Core'
 }
 
 { #category : 'testing' }
